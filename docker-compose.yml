@@ -1,16 +1,17 @@
-version: "3.9"
+version: "3.8"
 
 services:
-
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.6.0
+    image: confluentinc/cp-zookeeper:7.6.1
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
 
   kafka:
-    image: confluentinc/cp-kafka:7.6.0
+    image: confluentinc/cp-kafka:7.6.1
     container_name: kafka
     depends_on:
       - zookeeper
@@ -19,27 +20,22 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   warehouse-service:
-    build:
-      context: ./warehouse-service
+    build: .
     container_name: warehouse-service
     depends_on:
       - kafka
-    ports:
-      - "3344:3344/udp"
-      - "3355:3355/udp"
-    environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    command: >
+      java -cp app.jar com.company.warehouse.WarehouseApplication
 
   central-monitoring-service:
-    build:
-      context: ./central-monitoring-service
+    build: .
     container_name: central-monitoring-service
     depends_on:
       - kafka
-    environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    command: >
+      java -cp app.jar com.company.central.CentralMonitoringApplication
