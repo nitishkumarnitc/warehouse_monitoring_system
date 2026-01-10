@@ -21,6 +21,7 @@
         <module>common</module>
         <module>warehouse-service</module>
         <module>central-monitoring-service</module>
+        <module>bootstrap</module>
     </modules>
 
     <!-- ===================== -->
@@ -28,10 +29,9 @@
     <!-- ===================== -->
     <properties>
         <java.version>17</java.version>
-        <maven.compiler.release>${java.version}</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!-- Dependency Versions -->
+        <!-- Versions -->
         <slf4j.version>2.0.9</slf4j.version>
         <logback.version>1.4.11</logback.version>
         <junit.version>5.10.1</junit.version>
@@ -42,6 +42,7 @@
     <!-- ===================== -->
     <dependencyManagement>
         <dependencies>
+
             <!-- Logging -->
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -62,6 +63,7 @@
                 <version>${junit.version}</version>
                 <scope>test</scope>
             </dependency>
+
         </dependencies>
     </dependencyManagement>
 
