@@ -1,80 +1,167 @@
 ```md
-# Warehouse Monitoring System
+# 🏭 Warehouse Monitoring System (Kafka-Based)
 
-An event-driven, modular warehouse monitoring system that ingests sensor data over UDP, processes events in real time, and triggers alerts based on defined rules.
-
-Designed with clean architecture principles and built using Java 17 and Maven multi-module setup.
+A distributed, event-driven system for ingesting real-time warehouse sensor data using **UDP + Apache Kafka**, with **retry**, **delay**, and **dead-letter queue (DLQ)** support.
 
 ---
 
-## High-Level Architecture
+## 📌 Overview
+
+This system ingests sensor readings (temperature, humidity, etc.) from warehouse devices via **UDP**, publishes them to **Kafka**, and processes them asynchronously using **Kafka consumer groups**.
+
+It is designed to be:
+- Scalable
+- Fault-tolerant
+- Replayable
+- Production-ready
+
+---
+
+## 🏗️ High-Level Architecture
 
 ```
 
-Sensors
-|
-|  UDP
-v
-Warehouse Service
-|
-|  EventBus
-v
-Central Monitoring Service
-|
-v
-Alerts / Logs
+┌──────────┐
+│ Sensors  │
+└────┬─────┘
+│ UDP
+▼
+┌────────────────────┐
+│ Warehouse Service  │
+│ (Kafka Producer)   │
+└────┬───────────────┘
+│
+▼
+┌──────────────────────────────────────┐
+│              Kafka                   │
+│                                      │
+│  sensor-events                       │
+│  sensor-events-retry-5s              │
+│  sensor-events-retry-30s             │
+│  sensor-events-dlq                   │
+└────┬─────────────────────────────────┘
+│
+▼
+┌────────────────────────────┐
+│ Central Monitoring Service │
+│ (Kafka Consumer)           │
+└────────────────────────────┘
+
+```
+
+---
+
+## 📦 Modules
+
+### 1️⃣ `common`
+Shared domain objects:
+- `SensorReading`
+- `SensorEvent`
+- `SensorType`
+- `MeasurementUnit`
+
+Used by all services.
+
+---
+
+### 2️⃣ `warehouse-service`
+- Listens on UDP ports
+- Parses raw sensor messages
+- Publishes events to Kafka
+
+**Key Responsibilities**
+- UDP ingestion
+- JSON serialization
+- Kafka producer logic
+
+---
+
+### 3️⃣ `central-monitoring-service`
+- Consumes Kafka events
+- Processes sensor data
+- Implements retry & DLQ logic
+
+**Retry Strategy**
+```
+
+sensor-events
+↓ failure
+sensor-events-retry-5s
+↓ failure
+sensor-events-retry-30s
+↓ failure
+sensor-events-dlq
 
 ````
 
 ---
 
-## Module Overview
-
-| Module | Description |
-|------|------------|
-| `common` | Shared domain models, events, and in-memory EventBus |
-| `warehouse-service` | UDP listeners, sensor message parsing |
-| `central-monitoring-service` | Rule engine and alert processing |
-| `bootstrap` | Application entry point to start all services |
+### 4️⃣ `bootstrap`
+- Entry point to start the system locally
+- Starts:
+  - Warehouse Service
+  - Central Monitoring Service
 
 ---
 
-## Design Principles
+## 🔁 Retry & DLQ Design
 
-- Event-driven architecture
-- Loose coupling between modules
-- Clear separation of responsibilities
-- No cyclic dependencies
-- JVM-only dependencies (easy to extend to Kafka / REST)
+| Topic | Purpose |
+|-----|--------|
+| `sensor-events` | Main processing |
+| `sensor-events-retry-5s` | Short delay retry |
+| `sensor-events-retry-30s` | Longer retry |
+| `sensor-events-dlq` | Poison messages |
 
----
-
-## Technology Stack
-
-- Java 17
-- Maven (multi-module)
-- Lombok
-- SLF4J / Logback
-- UDP networking (DatagramSocket)
+**Why topic-based delay?**
+- No thread blocking
+- Crash-safe
+- Horizontally scalable
+- Kafka-native
 
 ---
 
-## Prerequisites
+## 🧾 Sample Event Payload
 
-- Java 17
-- Maven 3.8+
+```json
+{
+  "sensorId": "T-1001",
+  "sensorType": "TEMPERATURE",
+  "value": 32.5,
+  "unit": "CELSIUS",
+  "timestamp": "2026-01-10T12:30:00Z"
+}
+````
 
-Verify:
+---
+
+## ⚙️ Tech Stack
+
+* Java 17
+* Apache Kafka
+* Jackson (JSON)
+* Maven (multi-module)
+* UDP (DatagramSocket)
+
+---
+
+## 🚀 How to Run (Local)
+
+### 1️⃣ Start Kafka (Docker)
+
 ```bash
-java -version
-mvn -version
-````
+docker-compose up -d
+```
+
+Kafka must be running on:
+
+```
+localhost:9092
+```
 
 ---
 
-## Build the Project
-
-From project root:
+### 2️⃣ Build the Project
 
 ```bash
 mvn clean install -DskipTests
@@ -82,76 +169,72 @@ mvn clean install -DskipTests
 
 ---
 
-## Run the System
-
-### Start the entire system
-
-```bash
-cd bootstrap
-mvn exec:java -Dexec.mainClass=com.company.bootstrap.SystemLauncher
-```
-
-### Start services individually (optional)
-
-Warehouse Service:
+### 3️⃣ Run Warehouse Service
 
 ```bash
 cd warehouse-service
-mvn exec:java -Dexec.mainClass=com.company.warehouse.WarehouseApplication
+mvn exec:java
 ```
 
-Central Monitoring Service:
+---
+
+### 4️⃣ Run Central Monitoring Service
 
 ```bash
 cd central-monitoring-service
-mvn exec:java -Dexec.mainClass=com.company.monitoring.CentralMonitoringApplication
+mvn exec:java
 ```
 
 ---
 
-## Example Output
+## 📈 Scalability
 
-```text
-Warehouse Service started
-Listening on UDP port 3344
-Listening on UDP port 3355
-ALERT: Temperature exceeded threshold
-```
+* Increase Kafka partitions
+* Add more consumers in the same group
+* Replay data by resetting offsets
 
 ---
 
-## Project Structure
+## 🛡️ Fault Tolerance
 
-```
-warehouse-monitoring-system
-├── common
-│   ├── model
-│   ├── event
-│   └── bus
-├── warehouse-service
-│   ├── udp
-│   └── parser
-├── central-monitoring-service
-│   └── rules
-└── bootstrap
-```
+| Failure            | Handling            |
+| ------------------ | ------------------- |
+| Consumer crash     | Kafka offset replay |
+| Bad message        | DLQ                 |
+| Kafka broker down  | Replication         |
+| Processing failure | Retry topics        |
 
 ---
 
-## Future Enhancements
+## 📊 Observability (Recommended)
 
-* Replace in-memory EventBus with Kafka
-* Add REST APIs for monitoring and alerts
-* Persist alerts to database
-* Dockerize services
-* Metrics and tracing (Micrometer, Prometheus)
+* Consumer lag monitoring
+* DLQ size alerts
+* Retry count metrics
+* Structured logging with correlation IDs
 
 ---
 
-## Author
+## 🧠 Interview One一句话 (One-liner)
 
-Nitish Kumar
-Senior Backend /  AI  Engineer
+> *“We ingest sensor data via UDP, publish events to Kafka, process them using consumer groups with topic-based delayed retries, and guarantee reliability using DLQs and replayable streams.”*
 
-```
+---
+
+## 📌 Future Improvements
+
+* Schema Registry
+* Exactly-once semantics
+* Kubernetes deployment
+* Prometheus + Grafana
+* Kafka Streams for aggregation
+
+---
+
+## 👤 Author
+
+**Nitish Kumar**
+Senior Backend / AI Engineer
+
+---
 
