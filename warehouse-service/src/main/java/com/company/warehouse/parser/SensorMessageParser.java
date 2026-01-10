@@ -1,42 +1,27 @@
 package com.company.warehouse.parser;
 
-import com.company.common.model.MeasurementUnit;
-import com.company.common.model.SensorReading;
-import com.company.common.model.SensorType;
+import com.company.common.model.*;
 
 import java.time.Instant;
-import java.util.Map;
 
 public class SensorMessageParser {
 
-    public SensorReading parse(
-            String message,
-            SensorType sensorType,
-            MeasurementUnit unit
-    ) {
+    public static SensorReading parse(String message, SensorType type) {
         // Example: sensor_id=t1; value=30
-        Map<String, String> parts = parseKeyValue(message);
+        String[] parts = message.split(";");
 
-        String sensorId = parts.get("sensor_id");
-        double value = Double.parseDouble(parts.get("value"));
+        String sensorId = parts[0].split("=")[1].trim();
+        double value = Double.parseDouble(parts[1].split("=")[1].trim());
+
+        MeasurementUnit unit =
+                type == SensorType.TEMPERATURE ? MeasurementUnit.CELSIUS : MeasurementUnit.PERCENT;
 
         return new SensorReading(
                 sensorId,
                 value,
-                sensorType,
+                type,
                 unit,
                 Instant.now()
         );
-    }
-
-    private Map<String, String> parseKeyValue(String message) {
-        return message.lines()
-                .flatMap(line -> java.util.Arrays.stream(line.split(";")))
-                .map(String::trim)
-                .map(kv -> kv.split("="))
-                .collect(java.util.stream.Collectors.toMap(
-                        kv -> kv[0].trim(),
-                        kv -> kv[1].trim()
-                ));
     }
 }

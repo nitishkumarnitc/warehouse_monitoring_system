@@ -1,10 +1,13 @@
 package com.company.warehouse.udp;
 
-import com.company.common.bus.EventBus;
 import com.company.common.event.SensorEvent;
-import com.company.common.model.MeasurementUnit;
 import com.company.common.model.SensorReading;
 import com.company.common.model.SensorType;
+import com.company.common.model.MeasurementUnit;
+import com.company.warehouse.kafka.KafkaProducerFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -15,53 +18,50 @@ public class UdpSensorListener implements Runnable {
 
     private final int port;
     private final SensorType sensorType;
-    private final EventBus eventBus;
+    private final Producer<String, String> producer;
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    public UdpSensorListener(int port, SensorType sensorType, EventBus eventBus) {
+    public UdpSensorListener(int port, SensorType sensorType) {
         this.port = port;
         this.sensorType = sensorType;
-        this.eventBus = eventBus;
+        this.producer = KafkaProducerFactory.create();
     }
 
     @Override
     public void run() {
         try (DatagramSocket socket = new DatagramSocket(port)) {
-            System.out.println("Listening on UDP port " + port +
-                    " for " + sensorType + " data");
-
             byte[] buffer = new byte[1024];
+
+            System.out.println("📡 Listening on UDP port " + port);
 
             while (true) {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
 
-                String message = new String(
+                String payload = new String(
                         packet.getData(),
                         0,
                         packet.getLength(),
                         StandardCharsets.UTF_8
                 );
 
-                // Example: sensor_id=t1; value=40
-                String[] parts = message.split(";");
-                String sensorId = parts[0].split("=")[1].trim();
-                double value = Double.parseDouble(parts[1].split("=")[1].trim());
-
-                MeasurementUnit unit =
-                        sensorType == SensorType.TEMPERATURE
-                                ? MeasurementUnit.CELSIUS
-                                : MeasurementUnit.PERCENT;
+                double value = Double.parseDouble(payload);
 
                 SensorReading reading = new SensorReading(
-                        sensorId,
+                        "sensor-" + port,
                         value,
                         sensorType,
-                        unit,
+                        MeasurementUnit.CELSIUS,
                         Instant.now()
                 );
 
                 SensorEvent event = new SensorEvent(reading);
-                eventBus.publish(event);
+
+                String json = mapper.writeValueAsString(event);
+
+                producer.send(new ProducerRecord<>("sensor-events", json));
+
+                System.out.println("➡️ Sent to Kafka: " + json);
             }
         } catch (Exception e) {
             e.printStackTrace();
