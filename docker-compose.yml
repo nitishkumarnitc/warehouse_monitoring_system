@@ -23,19 +23,24 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
 
   warehouse-service:
     build: .
     container_name: warehouse-service
     depends_on:
-      - kafka
-    command: >
-      java -cp app.jar com.company.warehouse.WarehouseApplication
+      kafka:
+        condition: service_healthy
+    entrypoint: ["java", "-cp", "app.jar", "com.company.warehouse.WarehouseApplication"]
 
   central-monitoring-service:
     build: .
     container_name: central-monitoring-service
     depends_on:
-      - kafka
-    command: >
-      java -cp app.jar com.company.central.CentralMonitoringApplication
+      kafka:
+        condition: service_healthy
+    entrypoint: ["java", "-cp", "app.jar", "com.company.monitoring.CentralMonitoringApplication"]

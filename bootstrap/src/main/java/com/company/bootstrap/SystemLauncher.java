@@ -17,5 +17,11 @@ public class SystemLauncher {
         humidityListener.start();
 
         System.out.println("🚀 Warehouse Service started (Kafka enabled)");
+
+        try {
+            Thread.currentThread().join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }
