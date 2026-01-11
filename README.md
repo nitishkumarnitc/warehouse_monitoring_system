@@ -99,19 +99,10 @@ When something fails, we don't just drop it:
 
 ## Project Structure
 
-```
-warehouse-monitoring-system/
-├── common/                          # Shared models and utilities
-│   ├── SensorReading.java          # Main data model
-│   ├── SensorEvent.java            # Kafka message wrapper
-│   └── SensorValidator.java        # Input validation
-├── warehouse-service/               # UDP listener and Kafka producer
-│   └── WarehouseApplication.java   # Main entry point
-├── central-monitoring-service/      # Kafka consumer and processor
-│   └── CentralMonitoringApplication.java
-├── docker-compose.yml              # Docker setup
-└── Dockerfile                      # Container build
-```
+Three main modules:
+- **common/** - Shared stuff (models, validation)
+- **warehouse-service/** - Listens to UDP, sends to Kafka
+- **central-monitoring-service/** - Reads from Kafka, processes events
 
 ## Configuration
 
