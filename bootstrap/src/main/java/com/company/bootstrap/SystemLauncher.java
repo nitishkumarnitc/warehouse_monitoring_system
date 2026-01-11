@@ -16,7 +16,7 @@ public class SystemLauncher {
         temperatureListener.start();
         humidityListener.start();
 
-        System.out.println("🚀 Warehouse Service started (Kafka enabled)");
+        System.out.println("Warehouse Service started (Kafka enabled)");
 
         try {
             Thread.currentThread().join();

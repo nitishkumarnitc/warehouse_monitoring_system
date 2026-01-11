@@ -1,5 +1,8 @@
 package com.company.common.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.Instant;
 
 public final class SensorReading {
@@ -10,12 +13,13 @@ public final class SensorReading {
     private final MeasurementUnit unit;
     private final Instant timestamp;
 
+    @JsonCreator
     public SensorReading(
-            String sensorId,
-            double value,
-            SensorType sensorType,
-            MeasurementUnit unit,
-            Instant timestamp
+            @JsonProperty("sensorId") String sensorId,
+            @JsonProperty("value") double value,
+            @JsonProperty("sensorType") SensorType sensorType,
+            @JsonProperty("unit") MeasurementUnit unit,
+            @JsonProperty("timestamp") Instant timestamp
     ) {
         this.sensorId = sensorId;
         this.value = value;

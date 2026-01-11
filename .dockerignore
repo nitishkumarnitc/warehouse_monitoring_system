@@ -1,0 +1,61 @@
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+DESIGN.md
+*.md
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+
+# Build output (will be built inside Docker)
+target/
+**/target/
+build/
+out/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Maven wrapper (not needed if Maven is in Docker image)
+.mvn/
+mvnw
+mvnw.cmd
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+Jenkinsfile
+
+# Test files
+**/src/test/
+
+# Meta files
+META-INF/
+dependency-reduced-pom.xml

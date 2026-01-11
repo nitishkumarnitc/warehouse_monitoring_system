@@ -1,14 +1,19 @@
 <configuration>
+    <!-- Console appender with structured format -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
     <!-- Set Kafka client logging to WARN to reduce verbosity -->
     <logger name="org.apache.kafka" level="WARN"/>
+    <logger name="io.micrometer" level="INFO"/>
+    <logger name="io.prometheus" level="INFO"/>
 
     <!-- Application logging at INFO level -->
+    <logger name="com.company.monitoring" level="INFO"/>
+
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
