@@ -373,7 +373,7 @@ Some ideas I'm thinking about for making this better:
 - GraphQL API (REST is getting limiting)
 - Mobile app for warehouse managers
 
-**Infrastructure** (if this gets serious)
+**Infrastructure** 
 - Kubernetes with Helm
 - GitOps setup (ArgoCD)
 - Service mesh for traffic control
