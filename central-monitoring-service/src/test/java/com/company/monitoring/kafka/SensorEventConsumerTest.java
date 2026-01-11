@@ -133,7 +133,7 @@ class SensorEventConsumerTest {
     // Test-specific subclass that doesn't connect to real Kafka
     private static class TestSensorEventConsumer extends SensorEventConsumer {
         public TestSensorEventConsumer(String topic) {
-            super(topic, null); // null consumer for testing
+            super(topic, null, null); // null consumer and retry publisher for testing
         }
     }
 }

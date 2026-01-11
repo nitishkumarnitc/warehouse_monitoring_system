@@ -21,6 +21,7 @@ public class SensorEventConsumer implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(SensorEventConsumer.class);
 
     private final Consumer<String, String> consumer;
+    private final RetryPublisher retryPublisher;
     private final ObjectMapper mapper;
     private final String topic;
 
@@ -36,14 +37,10 @@ public class SensorEventConsumer implements Runnable {
         mapper.registerModule(new JavaTimeModule());
     }
 
-    public SensorEventConsumer(String topic) {
-        this(topic, KafkaConsumerFactory.create());
-    }
-
-    // Constructor with consumer injection for testing
-    public SensorEventConsumer(String topic, Consumer<String, String> consumer) {
+    public SensorEventConsumer(String topic, Consumer<String, String> consumer, RetryPublisher retryPublisher) {
         this.topic = topic;
         this.consumer = consumer;
+        this.retryPublisher = retryPublisher;
         if (consumer != null) {
             consumer.subscribe(List.of(topic));
         }
@@ -132,7 +129,7 @@ public class SensorEventConsumer implements Runnable {
 
         logger.warn("Retry attempt {} for message from topic: {}", retryCount, topic);
 
-        RetryPublisher.publish(record.value(), retryCount);
+        retryPublisher.publish(record.value(), retryCount);
     }
 
     // Package-private for testing
