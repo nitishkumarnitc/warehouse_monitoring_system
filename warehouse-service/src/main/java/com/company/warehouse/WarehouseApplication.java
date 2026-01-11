@@ -88,6 +88,7 @@ public class WarehouseApplication {
             shutdown.registerCloseable("health-server", healthServer::stop);
 
             // Create and start UDP listeners
+            // TODO: refactor this into a factory pattern when we add more sensor types
             List<UdpSensorListener> listeners = new ArrayList<>();
 
             int tempPort = config.getTemperaturePort();
@@ -98,6 +99,7 @@ public class WarehouseApplication {
             tempThread.start();
             listeners.add(tempListener);
 
+            // Same pattern for humidity - could definitely DRY this up
             int humidityPort = config.getHumidityPort();
             UdpSensorListener humidityListener = new UdpSensorListener(
                 humidityPort, SensorType.HUMIDITY, producer, config

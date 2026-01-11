@@ -8,13 +8,16 @@ import com.company.common.model.SensorType;
  */
 public class SensorValidator {
 
-    // Temperature ranges (Celsius)
+    // Temperature ranges (Celsius) - based on industrial sensor specs
     private static final double MIN_TEMPERATURE = -40.0;
     private static final double MAX_TEMPERATURE = 60.0;
 
     // Humidity ranges (percentage)
     private static final double MIN_HUMIDITY = 0.0;
     private static final double MAX_HUMIDITY = 100.0;
+
+    // NOTE: These are hardcoded for now. Should probably make them configurable
+    // per sensor or warehouse in the future.
 
     public static class ValidationResult {
         private final boolean valid;
@@ -82,6 +85,7 @@ public class SensorValidator {
             return ValidationResult.invalid("Sensor type is missing");
         }
 
+        // Using switch here - could use Strategy pattern but seems overkill for 2 types
         switch (type) {
             case TEMPERATURE:
                 return validateTemperature(reading, value);
