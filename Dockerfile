@@ -5,5 +5,8 @@ RUN mvn -B clean package -DskipTests
 
 FROM eclipse-temurin:17-jre
 WORKDIR /app
-COPY --from=build /build/bootstrap/target/bootstrap-1.0.0-SNAPSHOT.jar app.jar
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Copy fat JARs
+COPY --from=build /build/warehouse-service/target/warehouse-service-fat.jar /app/
+COPY --from=build /build/central-monitoring-service/target/central-monitoring-service-fat.jar /app/
+# Default entrypoint (overridden by docker-compose)
+ENTRYPOINT ["java", "-jar", "warehouse-service-fat.jar"]
