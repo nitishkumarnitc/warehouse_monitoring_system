@@ -1,10 +1,14 @@
 package com.company.common.kafka;
 
+import com.company.common.config.ApplicationConfig;
+import com.company.common.config.ServiceConfig;
 import com.company.common.model.KafkaHeaders;
 import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -13,77 +17,45 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class RetryPublisherTest {
 
-    @Test
-    void shouldPublishToRetry1TopicWhenRetryCountIs1() {
-        // This test demonstrates the expected behavior
-        // RetryPublisher uses a static producer, so we test the logic conceptually
+    private ServiceConfig config;
 
-        String payload = "{\"test\":\"data\"}";
+    @BeforeEach
+    void setUp() {
+        config = new ServiceConfig(new ApplicationConfig());
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Cleanup if needed
+    }
+
+    @Test
+    void shouldDetermineCorrectTopicForRetryCount1() {
+        // Test topic determination logic without actually publishing
         int retryCount = 1;
-        String expectedTopic = "sensor-events-retry-1";
-
-        // Verify the topic selection logic
-        String actualTopic;
-        if (retryCount == 1) {
-            actualTopic = "sensor-events-retry-1";
-        } else if (retryCount == 2) {
-            actualTopic = "sensor-events-retry-2";
-        } else {
-            actualTopic = "sensor-events-dlq";
-        }
-
-        assertThat(actualTopic).isEqualTo(expectedTopic);
+        String expectedTopic = config.getKafkaRetryTopic1();
+        assertThat(expectedTopic).isEqualTo("sensor-events-retry-1");
     }
 
     @Test
-    void shouldPublishToRetry2TopicWhenRetryCountIs2() {
+    void shouldDetermineCorrectTopicForRetryCount2() {
         int retryCount = 2;
-        String expectedTopic = "sensor-events-retry-2";
-
-        String actualTopic;
-        if (retryCount == 1) {
-            actualTopic = "sensor-events-retry-1";
-        } else if (retryCount == 2) {
-            actualTopic = "sensor-events-retry-2";
-        } else {
-            actualTopic = "sensor-events-dlq";
-        }
-
-        assertThat(actualTopic).isEqualTo(expectedTopic);
+        String expectedTopic = config.getKafkaRetryTopic2();
+        assertThat(expectedTopic).isEqualTo("sensor-events-retry-2");
     }
 
     @Test
-    void shouldPublishToDlqTopicWhenRetryCountIs3() {
+    void shouldDetermineCorrectTopicForRetryCount3() {
         int retryCount = 3;
-        String expectedTopic = "sensor-events-dlq";
-
-        String actualTopic;
-        if (retryCount == 1) {
-            actualTopic = "sensor-events-retry-1";
-        } else if (retryCount == 2) {
-            actualTopic = "sensor-events-retry-2";
-        } else {
-            actualTopic = "sensor-events-dlq";
-        }
-
-        assertThat(actualTopic).isEqualTo(expectedTopic);
+        String expectedTopic = config.getKafkaDlqTopic();
+        assertThat(expectedTopic).isEqualTo("sensor-events-dlq");
     }
 
     @Test
-    void shouldPublishToDlqTopicWhenRetryCountExceeds3() {
+    void shouldHandleRetryCountExceeding3() {
         int retryCount = 10;
-        String expectedTopic = "sensor-events-dlq";
-
-        String actualTopic;
-        if (retryCount == 1) {
-            actualTopic = "sensor-events-retry-1";
-        } else if (retryCount == 2) {
-            actualTopic = "sensor-events-retry-2";
-        } else {
-            actualTopic = "sensor-events-dlq";
-        }
-
-        assertThat(actualTopic).isEqualTo(expectedTopic);
+        String expectedTopic = config.getKafkaDlqTopic();
+        assertThat(expectedTopic).isEqualTo("sensor-events-dlq");
     }
 
     @Test
@@ -121,7 +93,6 @@ class RetryPublisherTest {
     @Test
     void shouldHandleComplexJsonPayload() {
         String complexPayload = "{\"reading\":{\"sensorId\":\"sensor-123\",\"value\":25.5}}";
-        int retryCount = 1;
 
         // Verify payload is not modified
         assertThat(complexPayload).contains("sensor-123");
@@ -130,20 +101,20 @@ class RetryPublisherTest {
 
     @Test
     void shouldSelectCorrectTopicForAllRetryLevels() {
-        assertThat(getTopicForRetry(0)).isEqualTo("sensor-events-dlq");
-        assertThat(getTopicForRetry(1)).isEqualTo("sensor-events-retry-1");
-        assertThat(getTopicForRetry(2)).isEqualTo("sensor-events-retry-2");
-        assertThat(getTopicForRetry(3)).isEqualTo("sensor-events-dlq");
-        assertThat(getTopicForRetry(100)).isEqualTo("sensor-events-dlq");
+        assertThat(determineTopicForRetryCount(0)).isEqualTo(config.getKafkaDlqTopic());
+        assertThat(determineTopicForRetryCount(1)).isEqualTo(config.getKafkaRetryTopic1());
+        assertThat(determineTopicForRetryCount(2)).isEqualTo(config.getKafkaRetryTopic2());
+        assertThat(determineTopicForRetryCount(3)).isEqualTo(config.getKafkaDlqTopic());
+        assertThat(determineTopicForRetryCount(100)).isEqualTo(config.getKafkaDlqTopic());
     }
 
-    private String getTopicForRetry(int retryCount) {
+    private String determineTopicForRetryCount(int retryCount) {
         if (retryCount == 1) {
-            return "sensor-events-retry-1";
+            return config.getKafkaRetryTopic1();
         } else if (retryCount == 2) {
-            return "sensor-events-retry-2";
+            return config.getKafkaRetryTopic2();
         } else {
-            return "sensor-events-dlq";
+            return config.getKafkaDlqTopic();
         }
     }
 }
