@@ -36,6 +36,14 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
             <version>2.17.2</version>
         </dependency>
+
+        <!-- Metrics -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <version>1.12.0</version>
+        </dependency>
+
         <!-- Shared models -->
         <dependency>
             <groupId>com.company</groupId>
@@ -82,12 +90,33 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>com.company.monitoring.MonitoringApplication</mainClass>
+                    <mainClass>com.company.monitoring.CentralMonitoringApplication</mainClass>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.company.monitoring.CentralMonitoringApplication</mainClass>
+                                </transformer>
+                            </transformers>
+                            <finalName>central-monitoring-service-fat</finalName>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

@@ -115,7 +115,7 @@ class UdpSensorListenerTest {
 
         assertThatThrownBy(() -> listener.processPacket(packet))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Invalid sensor value");
+                .hasMessageContaining("Invalid sensor");
 
         assertThat(mockProducer.history()).isEmpty();
     }
@@ -175,14 +175,18 @@ class UdpSensorListenerTest {
     void shouldHandleVeryLargeValues() {
         listener = new UdpSensorListener(3344, SensorType.TEMPERATURE, mockProducer);
 
+        // Updated: 999999.99 is out of valid range (-40 to 60°C), should be rejected
         byte[] data = "999999.99".getBytes(StandardCharsets.UTF_8);
         DatagramPacket packet = new DatagramPacket(data, data.length);
 
-        listener.processPacket(packet);
+        assertThatThrownBy(() -> listener.processPacket(packet))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Invalid sensor data")
+                .hasCauseInstanceOf(IllegalArgumentException.class)
+                .cause()
+                .hasMessageContaining("exceeds maximum");
 
-        assertThat(mockProducer.history()).hasSize(1);
-        ProducerRecord<String, String> record = mockProducer.history().get(0);
-        assertThat(record.value()).contains("\"value\":999999.99");
+        assertThat(mockProducer.history()).isEmpty();
     }
 
     @Test
