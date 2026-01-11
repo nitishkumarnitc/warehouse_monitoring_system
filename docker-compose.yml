@@ -39,7 +39,7 @@ services:
       - "3344:3344/udp"
       - "3355:3355/udp"
       - "8080:8080"  # Prometheus metrics
-    entrypoint: ["java", "-cp", "app.jar", "com.company.warehouse.WarehouseApplication"]
+    entrypoint: ["java", "-jar", "/app/warehouse-service-fat.jar"]
 
   central-monitoring-service:
     build: .
@@ -49,7 +49,7 @@ services:
         condition: service_healthy
     ports:
       - "8081:8081"  # Prometheus metrics
-    entrypoint: ["java", "-cp", "app.jar", "com.company.monitoring.CentralMonitoringApplication"]
+    entrypoint: ["java", "-jar", "/app/central-monitoring-service-fat.jar"]
 
   prometheus:
     image: prom/prometheus:latest

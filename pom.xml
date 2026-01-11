@@ -21,7 +21,7 @@
         <module>common</module>
         <module>warehouse-service</module>
         <module>central-monitoring-service</module>
-        <module>bootstrap</module>
+        <!-- <module>bootstrap</module> Disabled - use WarehouseApplication directly -->
     </modules>
 
     <!-- ===================== -->
