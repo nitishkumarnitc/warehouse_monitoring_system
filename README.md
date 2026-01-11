@@ -145,6 +145,9 @@ export UDP_RATE_LIMIT=1000
 ## Building and Testing
 
 ```bash
+# Setup git hooks (recommended)
+./setup-hooks.sh
+
 # Build everything
 mvn clean install
 
@@ -234,6 +237,9 @@ The system includes several production-ready features:
 - **Input validation** for sensor ranges
 - **Graceful shutdown** with producer flushing
 - **Configurable everything** via environment variables
+- **CI/CD** with GitHub Actions
+- **Code quality** checks with SonarQube
+- **Pre-commit hooks** to catch issues early
 
 ### Sensor Validation Rules
 
@@ -290,6 +296,28 @@ mvn clean test jacoco:report
 # View coverage
 open */target/site/jacoco/index.html
 ```
+
+### CI/CD Setup
+
+The project includes GitHub Actions workflows that run automatically on pushes to `main` and `develop` branches:
+
+**What gets checked:**
+- Build and compile
+- All unit tests
+- Code coverage with JaCoCo
+- SonarQube analysis (if configured)
+- Docker image builds
+- Integration tests
+
+**Pre-commit hooks:**
+- Runs tests before allowing commits
+- Warns about direct commits to main/develop
+- Setup: `./setup-hooks.sh`
+
+**SonarQube setup (optional):**
+1. Get your SonarQube URL and token
+2. Add to GitHub secrets: `SONAR_TOKEN` and `SONAR_HOST_URL`
+3. CI will automatically scan on every push
 
 ## Future Improvements
 
