@@ -7,11 +7,11 @@ echo "Running pre-commit checks..."
 BRANCH=$(git symbolic-ref --short HEAD)
 
 if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "develop" ]; then
-    echo "⚠️  Warning: You're committing directly to $BRANCH"
+    echo "Warning: You're committing directly to $BRANCH"
     echo "   Consider using a feature branch instead"
 
     # Uncomment to block direct commits to main/develop
-    # echo "❌ Direct commits to $BRANCH are not allowed"
+    # echo "Direct commits to $BRANCH are not allowed"
     # exit 1
 fi
 
@@ -20,7 +20,7 @@ echo "Running unit tests..."
 mvn test -q > /dev/null 2>&1
 
 if [ $? -ne 0 ]; then
-    echo "❌ Tests failed. Please fix before committing."
+    echo "Tests failed. Please fix before committing."
     echo "   Run 'mvn test' to see details"
     exit 1
 fi
@@ -28,5 +28,5 @@ fi
 # Check code formatting (optional - would need spotless plugin)
 # mvn spotless:check > /dev/null 2>&1
 
-echo "✅ All pre-commit checks passed!"
+echo "All pre-commit checks passed!"
 exit 0

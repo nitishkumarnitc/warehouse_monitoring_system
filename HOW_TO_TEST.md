@@ -4,7 +4,7 @@ This guide shows you exactly how to test the system - both automated tests and m
 
 ## Test Results Summary
 
-✅ **All 94 tests passing!**
+All 94 tests passing!
 
 - Common module: 77 tests
 - Warehouse Service: 11 tests
