@@ -99,19 +99,10 @@ When something fails, we don't just drop it:
 
 ## Project Structure
 
-```
-warehouse-monitoring-system/
-├── common/                          # Shared models and utilities
-│   ├── SensorReading.java          # Main data model
-│   ├── SensorEvent.java            # Kafka message wrapper
-│   └── SensorValidator.java        # Input validation
-├── warehouse-service/               # UDP listener and Kafka producer
-│   └── WarehouseApplication.java   # Main entry point
-├── central-monitoring-service/      # Kafka consumer and processor
-│   └── CentralMonitoringApplication.java
-├── docker-compose.yml              # Docker setup
-└── Dockerfile                      # Container build
-```
+Three main modules:
+- **common/** - Shared stuff (models, validation)
+- **warehouse-service/** - Listens to UDP, sends to Kafka
+- **central-monitoring-service/** - Reads from Kafka, processes events
 
 ## Configuration
 
@@ -145,6 +136,9 @@ export UDP_RATE_LIMIT=1000
 ## Building and Testing
 
 ```bash
+# Setup git hooks (recommended)
+./setup-hooks.sh
+
 # Build everything
 mvn clean install
 
@@ -234,6 +228,9 @@ The system includes several production-ready features:
 - **Input validation** for sensor ranges
 - **Graceful shutdown** with producer flushing
 - **Configurable everything** via environment variables
+- **CI/CD** with GitHub Actions
+- **Code quality** checks with SonarQube
+- **Pre-commit hooks** to catch issues early
 
 ### Sensor Validation Rules
 
@@ -290,6 +287,152 @@ mvn clean test jacoco:report
 # View coverage
 open */target/site/jacoco/index.html
 ```
+
+### CI/CD Setup
+
+The project includes GitHub Actions workflows that run automatically on pushes to `main` and `develop` branches:
+
+**What gets checked:**
+- Build and compile
+- All unit tests
+- Code coverage with JaCoCo
+- SonarQube analysis (if configured)
+- Docker image builds
+- Integration tests
+
+**Pre-commit hooks:**
+- Runs tests before allowing commits
+- Warns about direct commits to main/develop
+- Setup: `./setup-hooks.sh`
+
+**SonarQube setup (optional):**
+1. Get your SonarQube URL and token
+2. Add to GitHub secrets: `SONAR_TOKEN` and `SONAR_HOST_URL`
+3. CI will automatically scan on every push
+
+## Future Improvements
+
+Some ideas I'm thinking about for making this better:
+
+### Quick Wins (1-2 weeks)
+
+**Better Observability**
+- Distributed tracing (probably OpenTelemetry or Jaeger)
+- Structured logging with correlation IDs across services
+- Alerts for weird sensor behavior (spikes, failures, etc.)
+
+**Performance Stuff**
+- Batch Kafka messages instead of sending one at a time
+- Connection pooling for Kafka
+- Maybe switch to Protobuf instead of JSON if performance becomes an issue
+
+**Testing**
+- Chaos tests (what happens when Kafka dies?)
+- Contract testing between services
+- Load testing to see where it breaks
+
+### Bigger Changes (1-2 months)
+
+**Architecture Rework**
+- Move to Kafka Streams for real-time processing
+- CQRS might make sense if we need different read/write patterns
+- Event sourcing for audit trail (could be useful for compliance)
+- API Gateway in front of everything
+
+**Scaling It Up**
+- Partition by warehouse zone (right now everything goes to same partition)
+- Auto-scale consumers based on lag
+- Handle backpressure better on UDP side
+- Multi-DC Kafka setup for HA
+
+**Data Stuff**
+- Real-time aggregations - moving averages, hourly min/max, etc.
+- ML-based anomaly detection (isolation forest or similar)
+- Time-series DB (InfluxDB looks good) for better querying
+- Archive old data to S3
+
+**Security** (important if going to production)
+- OAuth2/JWT for API auth
+- mTLS between services
+- Encryption everywhere
+- Vault for secrets
+- Rate limiting per tenant
+
+### Big Picture Ideas (3-6 months)
+
+**Turn This Into a Platform**
+- Sensor management API (register/remove sensors dynamically)
+- Dashboard for sensor health
+- Let users configure thresholds per sensor
+- Multi-tenant support (different warehouses don't see each other's data)
+
+**Cool Features**
+- Predict when sensors are about to fail
+- Real-time alerts (Slack/PagerDuty integration)
+- Spark pipeline for batch analytics
+- GraphQL API (REST is getting limiting)
+- Mobile app for warehouse managers
+
+**Infrastructure** 
+- Kubernetes with Helm
+- GitOps setup (ArgoCD)
+- Service mesh for traffic control
+- Blue-green deployments
+- Multi-region for redundancy
+
+**Data Science Stuff**
+- ML models to predict temperature/humidity trends
+- Feature store (Feast maybe?)
+- A/B testing for threshold tuning
+- Data quality checks
+
+**DevOps**
+- Auto capacity planning from metrics
+- Cost optimization (we're probably overpaying somewhere)
+- DR automation
+- Compliance stuff (SOC2, GDPR if needed)
+
+### Design Patterns (TODO)
+
+The code could use some refactoring with proper patterns:
+
+**Creating Objects Better**
+- Factory for sensor creation (right now it's hardcoded by port)
+- Builder for complex sensor events
+- Singleton for Kafka instances (thread-safe)
+
+**Structure Cleanup**
+- Adapter pattern when we add TCP/MQTT sensors
+- Decorator for encryption/compression layers
+- Facade to hide Kafka complexity
+- Maybe proxy for caching
+
+**Behavior Patterns** (when we need them)
+- Strategy for different validation rules per sensor type
+- Observer for sensor state change listeners
+- Chain of responsibility for the processing pipeline
+- Template method for sensor-specific processing steps
+
+**Architecture Patterns**
+- Repository for sensor metadata access
+- Saga for distributed transactions
+- Strangler fig to migrate from UDP to gRPC eventually
+- Anti-corruption layer between domains
+
+**Note:** Only adding these when needed. Right now the code is simple and works. Don't want to over-engineer just to use patterns.
+
+### What I Learned Building This
+
+Building this taught me a lot about:
+- Designing event-driven systems at scale
+- When to add complexity vs keeping it simple
+- Making systems resilient (retry logic, circuit breakers, graceful shutdown)
+- Balancing current needs with future growth
+- Writing code that's maintainable and testable
+
+Most importantly: knowing when NOT to add something is as important as knowing what to add.
+
+---
 
 ## License
 
